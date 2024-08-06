@@ -8,7 +8,9 @@ int main(void)
 {
 	char out[BUFSIZ] = {0}, err[BUFSIZ] = {0};
 	
-	if( command("ls -l", out, BUFSIZ - 1, err, BUFSIZ - 1) == -1){
+	char *string = "ls -l";
+//	char *string;
+	if( command(string, out, BUFSIZ - 1, err, BUFSIZ - 1) == -1){
 		perror("command");
 		exit(EXIT_FAILURE);
 	}
