@@ -47,14 +47,15 @@ int command(const char *string, char *outbuf, int outlen, char *errbuf, int errl
 		close(out_fd[0]);
 		close(err_fd[0]);
 
-		
+		//duplicate the file descriptors of the read end of the pipes
+		//onto the respective stdin & stdout file numbers
 		dup2(out_fd[1], STDOUT_FILENO);
 		dup2(err_fd[1], STDERR_FILENO);
 
-		//tokenize string into argument for execl
+		//tokenize string into argument for execvp
 		char *args[2];
 		int i = 0;
-		char *token = strtok(strdup(string), " ");
+		char *token = strtok(strdup(string), " "); //strdup for a const string
 		while (token != NULL && i < 2){
 			args[i++] = token;
 			token = strtok(NULL, " ");
