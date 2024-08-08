@@ -10,21 +10,49 @@ void ignore_handler(int sig){
 }
 
 int command(const char *string, char *outbuf, int outlen, char *errbuf, int errlen)
-{
-	signal(SIGINT, ignore_handler);
-	signal(SIGQUIT, ignore_handler);
+{	
+	//ignore SIGINT and SIGQUIT
+
+//	signal(SIGINT, ignore_handler);
+//	signal(SIGQUIT, ignore_handler);
 	
+	struct sigaction act;
+
+	memset(&act, 0, sizeof(struct sigaction));
+
+	act.sa_handler = SIG_IGN;
+
+	if(sigaction(SIGINT, &act, NULL) == -1){
+		perror("sigaction SIGINT");
+		return -1;
+	}
+
+	if(sigaction(SIGQUIT, &act, NULL) == -1){
+		perror("sigaction SIGQUIT");
+		return -1;
+	}
+
+
+	//block SIGCHLD
+	sigset_t newmask, oldmask;
+	sigemptyset(&newmask);
+	sigaddset(&newmask, SIGCHLD);
+	if( (sigprocmask(SIG_BLOCK, &newmask, &oldmask)) < 0) {
+		perror("SIG_BLOCK error");
+		return -1;
+	}
+
 	if(string == NULL){
 		return -1;
 	}
 
-	int n;
+	
 	int out_fd[2];
 	int err_fd[2];
 
 	pid_t pid;
-	FILE *fp;
-	fp = popen(string, "r+");
+	//FILE *fp;
+	//fp = popen(string, "r+");
 
 	if(pipe(out_fd) == -1 || pipe(err_fd) == -1){
 		return -1;
@@ -93,13 +121,31 @@ int command(const char *string, char *outbuf, int outlen, char *errbuf, int errl
 		if(waitpid(pid, &status, 0) == -1){
 			return status;
 		}
-
-		return 0;
+		
+		/*
+		 * return outside of if statement so that process will remove the signal block and ignore
+		 */
+		//return 0;
 
 	}
 
+	//restore signal mask and unblock SIGCHILD	
+	if(sigprocmask(SIG_SETMASK, &oldmask, NULL) < 0){
+		perror("SIG_STMASK error");
+	}
 
+	//restore SIGINT and SIGQUIT to default
+	act.sa_handler = SIG_DFL;
 
+	if(sigaction(SIGINT, &act, NULL) == -1){
+		perror("sigaction SIGINT DFL");
+		return -1;
+	}
+
+	if(sigaction(SIGINT, &act, NULL) == -1){
+		perror("sigaction SIGINT DFL");
+		return -1;
+	}
 
 	return 0;
 }

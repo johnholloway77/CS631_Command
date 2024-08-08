@@ -19,7 +19,7 @@ BINARY=command_app
 
 #rule to link to binary
 $(BINARY): $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) #$(LIBS) not needed
+	$(CC) -o $@ $(OBJECTS) $(LIBS) 
 
 #Rule to compile the source files into the object files
 %.o: %.c
